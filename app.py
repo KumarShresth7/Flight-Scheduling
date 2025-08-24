@@ -28,7 +28,7 @@ class FlightSchedulingApp:
         
         st.title("✈️ Mumbai Airport Flight Scheduling AI")
         st.markdown("""
-        **Intelligent Flight Operations Analysis** powered by LangChain & Gemini-2.5
+        **Intelligent Flight Operations Analysis**
         
         Ask questions about:
         - Flight delays and patterns  
