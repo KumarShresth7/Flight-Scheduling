@@ -110,6 +110,48 @@ class FlightDataProcessor:
         
         return analysis
 
+class FlightDatabase:
+    """SQLite database for storing processed flight data"""
+    
+    def __init__(self, db_path="flight_data.db"):
+        from sqlalchemy import create_engine, Column, String, DateTime, Integer, Float
+        from sqlalchemy.ext.declarative import declarative_base
+        from sqlalchemy.orm import sessionmaker
+        
+        self.engine = create_engine(f'sqlite:///{db_path}')
+        self.Base = declarative_base()
+        
+        # Define Flight table
+        class Flight(self.Base):
+            __tablename__ = 'flights'
+            
+            id = Column(Integer, primary_key=True)
+            flight_number = Column(String(10))
+            date = Column(DateTime)
+            origin = Column(String(3))
+            destination = Column(String(3))
+            aircraft_type = Column(String(10))
+            scheduled_departure = Column(DateTime)
+            actual_departure = Column(DateTime)
+            departure_delay_minutes = Column(Integer)
+            scheduled_arrival = Column(DateTime)
+            actual_arrival = Column(DateTime)
+            arrival_delay_minutes = Column(Integer)
+            status = Column(String(20))
+            peak_time_bucket = Column(String(20))
+        
+        self.Flight = Flight
+        self.Base.metadata.create_all(self.engine)
+        self.Session = sessionmaker(bind=self.engine)
 
+    def store_flights(self, processed_flights):
+        """Store processed flight data"""
+        session = self.Session()
+        for flight_data in processed_flights:
+            # Parse and store each flight record
+            # Implementation details for data insertion
+            pass
+        session.commit()
+        session.close()
     
         
