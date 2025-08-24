@@ -278,9 +278,7 @@ def main():
     
     with col2:
         st.info("**Data Source**: Mumbai Airport July 2025 Operations")
-    
-    with col3:
-        st.info("**Powered by**: Gemini AI + LangChain")
+
 
 # Add the missing create_performance_metrics function
 def create_performance_metrics(data):
