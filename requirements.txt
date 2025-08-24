@@ -1,5 +1,6 @@
 # requirements.txt
 langchain
+seaborn
 langchain-community
 langchain-google-genai
 streamlit
