@@ -1,4 +1,3 @@
-# app.py (Fixed Advanced Analytics Section)
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -10,14 +9,10 @@ import numpy as np
 import os
 import sqlite3
 from dotenv import load_dotenv
-
-# Import the updated flight agent
 from flight_agent import FlightAnalysisAgent
 
 load_dotenv()
 
-# [Keep all the existing visualization functions as they are]
-# ... (create_delay_distribution_chart, create_hourly_analysis, etc.)
 
 def main():
     st.set_page_config(
@@ -29,21 +24,18 @@ def main():
     st.title("✈️ Mumbai Airport Flight Scheduling AI")
     st.markdown("**Advanced Flight Operations Analysis** with Interactive Visualizations")
     
-    # Initialize agent
     api_key = os.getenv('GEMINI_API_KEY') or st.secrets.get('GEMINI_API_KEY')
     
     if not api_key:
         st.error("❌ Please set GEMINI_API_KEY in your environment or Streamlit secrets")
         st.stop()
     
-    # File upload option
     uploaded_file = st.file_uploader(
         "📂 Upload your Flight_Data.xlsx file (optional)", 
         type=['xlsx'], 
         help="Upload the Excel file with flight data."
     )
     
-    # Initialize agent
     if 'agent' not in st.session_state:
         try:
             with st.spinner("🔄 Loading flight data and initializing analysis system..."):
@@ -57,8 +49,6 @@ def main():
         except Exception as e:
             st.error(f"❌ Failed to initialize agent: {str(e)}")
             st.stop()
-    
-    # Navigation
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "🤖 AI Assistant", 
         "📊 Analytics Dashboard", 
@@ -68,7 +58,6 @@ def main():
     ])
     
     with tab1:
-        # AI Assistant Tab (keep existing code)
         col1, col2 = st.columns([2, 1])
         
         with col1:
@@ -118,26 +107,21 @@ def main():
                 st.error(f"Stats error: {str(e)}")
     
     with tab2:
-        # Analytics Dashboard
         st.header("📊 Flight Operations Dashboard")
         
         try:
             analytics = st.session_state.agent.get_analytics_data()
             
             if 'error' not in analytics:
-                # Performance metrics
                 if not analytics['correlation_analysis'].empty:
                     st.subheader("⚡ Key Performance Indicators")
                     create_performance_metrics(analytics['correlation_analysis'])
                     st.divider()
-                
-                # Delay Distribution
                 st.subheader("🕒 Delay Distribution Analysis")
                 create_delay_distribution_chart(analytics['delay_distribution'])
                 
                 st.divider()
                 
-                # Hourly Analysis
                 st.subheader("📅 Hourly Departure Patterns")
                 create_hourly_analysis(analytics['hourly_departures'])
                 
@@ -148,20 +132,17 @@ def main():
             st.error(f"Dashboard error: {str(e)}")
     
     with tab3:
-        # Performance Analysis
         st.header("📈 Performance Analysis")
         
         try:
             analytics = st.session_state.agent.get_analytics_data()
             
             if 'error' not in analytics:
-                # Airline Comparison
                 st.subheader("🏢 Airline Performance Comparison")
                 create_airline_comparison(analytics['airline_comparison'])
                 
                 st.divider()
                 
-                # Time Series
                 st.subheader("📈 Trend Analysis")
                 create_time_series_analysis(analytics['time_series_delays'])
                 
@@ -172,20 +153,17 @@ def main():
             st.error(f"Performance analysis error: {str(e)}")
     
     with tab4:
-        # Route & Aircraft Analysis
         st.header("🛫 Route & Aircraft Analysis")
         
         try:
             analytics = st.session_state.agent.get_analytics_data()
             
             if 'error' not in analytics:
-                # Route Performance
                 st.subheader("🗺️ Route Performance Analysis")
                 create_route_performance_charts(analytics['route_performance'])
                 
                 st.divider()
                 
-                # Aircraft Analysis
                 st.subheader("✈️ Aircraft Performance Analysis")
                 create_aircraft_analysis(analytics['aircraft_analysis'])
                 
@@ -196,37 +174,33 @@ def main():
             st.error(f"Route & Aircraft analysis error: {str(e)}")
     
     with tab5:
-        # FIXED Advanced Analytics Tab
         st.header("📉 Advanced Analytics")
         
         try:
             analytics = st.session_state.agent.get_analytics_data()
             
             if 'error' not in analytics:
-                # Heatmap
                 st.subheader("🔥 Delay Pattern Heatmap")
                 create_delay_heatmap(analytics['delay_heatmap'])
                 
                 st.divider()
                 
-                # Correlation Analysis
                 st.subheader("🔗 Correlation Analysis")
                 create_correlation_analysis(analytics['correlation_analysis'])
                 
                 st.divider()
                 
-                # FIXED Raw Data Explorer
                 st.subheader("🔍 Data Explorer")
                 if st.checkbox("Show Raw Flight Data"):
                     try:
-                        # FIX: Use direct SQLite connection instead of agent.db.engine
+                    
                         conn = sqlite3.connect(st.session_state.agent.db_path)
                         raw_data = pd.read_sql("SELECT * FROM flights LIMIT 100", conn)
                         conn.close()
                         
                         st.dataframe(raw_data, use_container_width=True)
                         
-                        # Download option
+    
                         csv = raw_data.to_csv(index=False)
                         st.download_button(
                             label="📥 Download Flight Data CSV",
@@ -238,7 +212,7 @@ def main():
                     except Exception as e:
                         st.error(f"Error loading data: {str(e)}")
                 
-                # Additional Analytics
+
                 st.subheader("📊 Statistical Summary")
                 if not analytics['correlation_analysis'].empty:
                     corr_data = analytics['correlation_analysis']
@@ -250,7 +224,7 @@ def main():
                     
                     with col2:
                         st.metric("Avg Arrival Delay", f"{corr_data['arrival_delay_minutes'].mean():.1f} min")
-                        # Calculate delay recovery rate
+                      
                         recovery_rate = ((corr_data['departure_delay_minutes'] - corr_data['arrival_delay_minutes']) > 0).mean() * 100
                         st.metric("Delay Recovery Rate", f"{recovery_rate:.1f}%")
                     
@@ -264,7 +238,7 @@ def main():
         except Exception as e:
             st.error(f"Advanced analytics error: {str(e)}")
     
-    # Footer
+  
     st.divider()
     col1, col2, col3 = st.columns(3)
     
@@ -280,7 +254,7 @@ def main():
         st.info("**Data Source**: Mumbai Airport July 2025 Operations")
 
 
-# Add the missing create_performance_metrics function
+
 def create_performance_metrics(data):
     """Create performance metrics dashboard"""
     col1, col2, col3, col4 = st.columns(4)
@@ -313,7 +287,7 @@ def create_performance_metrics(data):
             "In-flight delay recovery"
         )
 
-# Keep all existing visualization functions (create_delay_distribution_chart, etc.)
+
 def create_delay_distribution_chart(data):
     """Create delay distribution pie and bar chart"""
     col1, col2 = st.columns(2)

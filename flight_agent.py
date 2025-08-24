@@ -1,4 +1,3 @@
-# flight_agent.py (Complete Enhanced Version)
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
@@ -74,22 +73,21 @@ class FlightAnalysisAgent:
         )
         
         self.db_path = db_path
-        # Create database from Excel dataset
         self._create_db_from_excel(excel_file_path, db_path)
         
-        # Connect to flight database
+     
         self.db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
         self.toolkit = SQLDatabaseToolkit(db=self.db, llm=self.llm)
         
-        # Create SQL agent
+
         self.agent = self._create_enhanced_agent()
     
     def _create_db_from_excel(self, excel_file_path: str, db_path: str):
         """Create database from actual Excel dataset"""
         try:
-            # Check if file exists
-            if hasattr(excel_file_path, 'read'):  # It's an uploaded file
-                # Read from uploaded file
+        
+            if hasattr(excel_file_path, 'read'):  
+              
                 df_6am = pd.read_excel(excel_file_path, sheet_name='6AM - 9AM', skiprows=1)
                 df_9am = pd.read_excel(excel_file_path, sheet_name='9AM - 12PM')
             elif os.path.exists(excel_file_path):
@@ -101,7 +99,7 @@ class FlightAnalysisAgent:
                 self._create_fallback_db(db_path)
                 return
             
-            # Process and clean the data
+
             processed_data = []
             
             print("🔄 Processing 6AM-9AM data...")
@@ -114,15 +112,15 @@ class FlightAnalysisAgent:
             if not cleaned_9am.empty:
                 processed_data.append(cleaned_9am)
             
-            # Combine all data
+
             if processed_data:
                 combined_df = pd.concat(processed_data, ignore_index=True)
                 
-                # Create SQLite database
+     
                 conn = sqlite3.connect(db_path)
                 combined_df.to_sql('flights', conn, if_exists='replace', index=False)
                 
-                # Create additional tables for better analysis
+          
                 self._create_additional_tables(conn, combined_df)
                 
                 conn.close()
@@ -133,7 +131,7 @@ class FlightAnalysisAgent:
             
         except Exception as e:
             print(f"❌ Error creating database from Excel: {str(e)}")
-            # Fallback to sample data if Excel processing fails
+    
             self._create_fallback_db(db_path)
     
     def _clean_flight_data(self, df: pd.DataFrame, time_period: str) -> pd.DataFrame:
@@ -145,48 +143,48 @@ class FlightAnalysisAgent:
         
         for idx, row in df.iterrows():
             try:
-                # Skip completely empty rows
+  
                 if row.isna().all():
                     continue
                 
-                # Check if this is a flight number row (contains flight number)
+          
                 flight_col = str(row.iloc[1]) if pd.notna(row.iloc[1]) else ""
                 
-                # If we find a flight number pattern (like AI2509, 6E762, etc.)
+
                 if re.match(r'^[A-Z0-9]{2}[0-9]+', flight_col.strip()):
                     current_flight = flight_col.strip()
                     continue
                 
-                # Process data rows (skip if no current flight context)
+             
                 if not current_flight:
                     continue
                 
-                # Look for rows with date information
+        
                 date_col = str(row.iloc[2]) if pd.notna(row.iloc[2]) else ""
                 
                 if '2025' in date_col or any(col for col in row.values if pd.notna(col) and '2025' in str(col)):
-                    # Extract flight data from this row
+
                     origin = self._extract_airport_code(str(row.iloc[3])) if pd.notna(row.iloc[3]) else 'BOM'
                     destination = self._extract_airport_code(str(row.iloc[4])) if pd.notna(row.iloc[4]) else 'Unknown'
                     aircraft = self._extract_aircraft_type(str(row.iloc[5])) if pd.notna(row.iloc[5]) else 'Unknown'
                     
-                    # Parse scheduled and actual times
+
                     std = self._parse_time_from_excel(row.iloc[7]) if pd.notna(row.iloc[7]) else None
                     atd = self._parse_time_from_excel(row.iloc[8]) if pd.notna(row.iloc[8]) else None
                     sta = self._parse_time_from_excel(row.iloc[9]) if pd.notna(row.iloc[9]) else None
                     
-                    # Extract actual arrival time from status text (column 11)
+
                     ata_text = str(row.iloc[11]) if pd.notna(row.iloc[11]) else ''
                     ata = self._extract_actual_time(ata_text)
                     
-                    # Calculate delays
+             
                     dep_delay = self._calculate_delay(std, atd) if std and atd else 0
                     arr_delay = self._calculate_delay(sta, ata) if sta and ata else 0
                     
-                    # Extract date
+
                     flight_date = self._extract_date(date_col)
                     
-                    # Status
+              
                     status = 'Landed' if 'Landed' in ata_text else 'Unknown'
                     
                     flight_record = {
@@ -231,20 +229,20 @@ class FlightAnalysisAgent:
             return None
         
         try:
-            # If it's already a time string
+          
             if isinstance(time_value, str) and ':' in time_value:
-                return time_value.split()[0]  # Remove any extra text
+                return time_value.split()[0]  
             
-            # If it's a datetime object
+            
             if hasattr(time_value, 'time'):
                 return time_value.time().strftime("%H:%M")
             
-            # If it's a string representation of time
+           
             time_str = str(time_value)
             if ':' in time_str:
                 parts = time_str.split(':')
                 hour = int(parts[0])
-                minute = int(parts[1].split()[0])  # Handle cases like "06:00:00"
+                minute = int(parts[1].split()[0])  
                 return f"{hour:02d}:{minute:02d}"
             
             return None
@@ -256,7 +254,7 @@ class FlightAnalysisAgent:
         if not ata_text or pd.isna(ata_text) or ata_text == 'Unknown':
             return None
         
-        # Look for time patterns like "8:14 AM", "10:30 PM"
+       
         time_pattern = r'(\d{1,2}):(\d{2})\s*(AM|PM)'
         match = re.search(time_pattern, str(ata_text))
         
@@ -265,7 +263,7 @@ class FlightAnalysisAgent:
             minute = int(match.group(2))
             ampm = match.group(3)
             
-            # Convert to 24-hour format
+        
             if ampm == 'PM' and hour != 12:
                 hour += 12
             elif ampm == 'AM' and hour == 12:
@@ -278,15 +276,15 @@ class FlightAnalysisAgent:
     def _extract_date(self, date_str):
         """Extract date from date string"""
         try:
-            # Handle various date formats in Excel
+           
             if '2025-07' in str(date_str):
-                return str(date_str).split()[0]  # Extract just the date part
+                return str(date_str).split()[0]
             elif 'Jul 2025' in str(date_str):
                 day_match = re.search(r'(\d+)', str(date_str))
                 if day_match:
                     day = day_match.group(1).zfill(2)
                     return f"2025-07-{day}"
-            return "2025-07-25"  # Default date
+            return "2025-07-25"
         except:
             return "2025-07-25"
     
@@ -296,7 +294,6 @@ class FlightAnalysisAgent:
             return 0
         
         try:
-            # Convert to datetime for calculation
             sched_time = datetime.strptime(scheduled, "%H:%M")
             actual_time = datetime.strptime(actual, "%H:%M")
             
@@ -307,7 +304,7 @@ class FlightAnalysisAgent:
     
     def _create_additional_tables(self, conn, df):
         """Create additional tables for better analysis"""
-        # Routes table
+        
         routes = df.groupby(['origin', 'destination']).agg({
             'departure_delay_minutes': ['mean', 'count'],
             'flight_number': 'nunique'
@@ -316,7 +313,7 @@ class FlightAnalysisAgent:
         routes = routes.reset_index()
         routes.to_sql('routes', conn, if_exists='replace', index=False)
         
-        # Airlines table (extract from flight numbers)
+       
         airlines_data = []
         for flight_num in df['flight_number'].unique():
             if pd.notna(flight_num):
@@ -334,7 +331,7 @@ class FlightAnalysisAgent:
             airlines_summary = airlines_df.groupby(['airline_code', 'airline_name'])['flight_count'].sum().reset_index()
             airlines_summary.to_sql('airlines', conn, if_exists='replace', index=False)
         
-        # Aircraft performance table
+     
         aircraft_perf = df.groupby('aircraft_type').agg({
             'departure_delay_minutes': ['mean', 'count'],
             'arrival_delay_minutes': 'mean'
@@ -390,23 +387,21 @@ class FlightAnalysisAgent:
     def _create_enhanced_agent(self):
         """Create SQL agent with aviation-specific tools using updated API"""
         
-        # Initialize custom tools
         custom_tools = [
             DelayAnalysisTool(),
             PeakHourTool(),
             RouteOptimizationTool()
         ]
         
-        # Create agent with updated create_sql_agent function
         agent = create_sql_agent(
             llm=self.llm,
             toolkit=self.toolkit,
             agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
             verbose=True,
             max_iterations=5,
-            extra_tools=custom_tools,  # Pass custom tools
+            extra_tools=custom_tools,  
             agent_executor_kwargs={
-                "handle_parsing_errors": True,  # Handle parsing errors
+                "handle_parsing_errors": True,  
                 "return_intermediate_steps": True
             }
         )
@@ -416,7 +411,7 @@ class FlightAnalysisAgent:
     def query_flights(self, user_question: str) -> str:
         """Process natural language queries about flight data"""
         
-        # Enhanced prompt with aviation context
+      
         aviation_context = f"""
         You are analyzing Mumbai Airport (BOM) flight operations data from the actual dataset with expertise in:
         - STD/ATD: Scheduled/Actual Departure Time  
@@ -450,7 +445,6 @@ class FlightAnalysisAgent:
         try:
             result = self.agent.invoke({"input": aviation_context})
             
-            # Extract the output from the result
             if isinstance(result, dict) and 'output' in result:
                 return result['output']
             else:
@@ -464,11 +458,11 @@ class FlightAnalysisAgent:
         try:
             conn = sqlite3.connect(self.db_path)
             
-            # Basic stats
+            
             total_flights = pd.read_sql("SELECT COUNT(*) as count FROM flights", conn).iloc[0]['count']
             avg_delay = pd.read_sql("SELECT AVG(departure_delay_minutes) as avg_delay FROM flights", conn).iloc[0]['avg_delay']
             
-            # Top delayed routes
+           
             top_delayed = pd.read_sql("""
                 SELECT origin, destination, AVG(departure_delay_minutes) as avg_delay, COUNT(*) as flights
                 FROM flights 
@@ -478,7 +472,7 @@ class FlightAnalysisAgent:
                 LIMIT 5
             """, conn)
             
-            # Airline performance
+          
             airline_perf = pd.read_sql("""
                 SELECT SUBSTR(flight_number, 1, 2) as airline, 
                        AVG(departure_delay_minutes) as avg_delay,
