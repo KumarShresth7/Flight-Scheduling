@@ -1,4 +1,3 @@
-# streamlit_app.py (Fixed Plotly issue)
 import streamlit as st
 from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import HumanMessage, AIMessage
@@ -7,8 +6,6 @@ import plotly.graph_objects as go
 import pandas as pd
 import os
 from dotenv import load_dotenv
-
-# Import the updated flight agent
 from flight_agent import FlightAnalysisAgent
 
 load_dotenv()
@@ -20,13 +17,12 @@ class FlightSchedulingApp:
     
     def setup_page(self):
         st.set_page_config(
-            page_title="✈️ Flight Scheduling AI",
-            page_icon="✈️",
+            page_title="✈️Flight Scheduling AI",
             layout="wide",
             initial_sidebar_state="expanded"
         )
         
-        st.title("✈️ Mumbai Airport Flight Scheduling AI")
+        st.title("✈️Mumbai Airport Flight Scheduling AI")
         st.markdown("""
         **Intelligent Flight Operations Analysis**
         
@@ -49,22 +45,20 @@ class FlightSchedulingApp:
             if 'agent' not in st.session_state:
                 api_key = os.getenv('GEMINI_API_KEY')
                 if not api_key:
-                    st.error("❌ Please set GEMINI_API_KEY in your .env file")
+                    st.error("Please set GEMINI_API_KEY in your .env file")
                     st.stop()
                 
                 with st.spinner("Initializing Flight Analysis Agent..."):
                     st.session_state.agent = FlightAnalysisAgent(api_key)
-                    st.success("✅ Flight Analysis Agent initialized successfully!")
+                    st.success("Flight Analysis Agent initialized successfully!")
         except Exception as e:
-            st.error(f"❌ Initialization error: {str(e)}")
+            st.error(f"Initialization error: {str(e)}")
             st.stop()
     
     def run(self):
         """Main application interface"""
-        
-        # Sidebar
         with st.sidebar:
-            st.header("🎯 Quick Queries")
+            st.header("🎯Quick Queries")
             
             sample_questions = [
                 "Which flights have the most departure delays?",
@@ -80,7 +74,7 @@ class FlightSchedulingApp:
                     st.session_state.selected_query = question
             
             st.divider()
-            st.header("📊 Database Info")
+            st.header("📊Database Info")
             st.info("""
             **Sample Data Loaded:**
             - 5 Mumbai flights
@@ -88,37 +82,30 @@ class FlightSchedulingApp:
             - Delay analysis ready
             - Route: BOM → IXC,HYD,DEL,SXR,BLR
             """)
-        
-        # Main interface
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            st.header("💬 Flight Operations Assistant")
+            st.header("💬Flight Operations Assistant")
             
-            # Handle selected query from sidebar
             if 'selected_query' in st.session_state:
                 user_query = st.session_state.selected_query
                 del st.session_state.selected_query
             else:
                 user_query = None
             
-            # Chat input
             if not user_query:
                 user_query = st.chat_input("Ask about flight schedules, delays, or optimizations...")
             
             if user_query:
-                # Display user message
                 with st.chat_message("user"):
                     st.write(user_query)
                 
-                # Process with agent
                 with st.chat_message("assistant"):
                     with st.spinner("🔍 Analyzing flight data..."):
                         try:
                             response = st.session_state.agent.query_flights(user_query)
                             st.write(response)
                             
-                            # Save to memory
                             st.session_state.memory.save_context(
                                 {"input": user_query},
                                 {"output": response}
@@ -130,7 +117,6 @@ class FlightSchedulingApp:
         with col2:
             st.header("📈 Flight Metrics")
             
-            # Sample metrics
             col_a, col_b = st.columns(2)
             with col_a:
                 st.metric("Avg Delay", "13.0 min", "↓2.5 min")
@@ -139,8 +125,6 @@ class FlightSchedulingApp:
             with col_b:
                 st.metric("Peak Window", "6:00-6:30 AM", "3 flights")
                 st.metric("Worst Route", "BOM-IXC", "20 min avg")
-            
-            # FIXED: Sample chart with correct Plotly syntax
             sample_delays = pd.DataFrame({
                 'Flight': ['AI2509', 'AI2625', '6E762', 'QP1891', '6E5352'],
                 'Delay_Minutes': [20, 17, 8, 20, 0],
@@ -157,7 +141,6 @@ class FlightSchedulingApp:
                 labels={'Delay_Minutes': 'Delay (Minutes)', 'Flight': 'Flight Number'}
             )
             
-            # FIXED: Use update_layout instead of update_xaxis
             fig.update_layout(
                 xaxis_tickangle=-45,  # Rotate x-axis labels
                 showlegend=False,     # Hide color legend for cleaner look
@@ -166,7 +149,6 @@ class FlightSchedulingApp:
             
             st.plotly_chart(fig, use_container_width=True)
             
-            # Additional charts
             st.subheader("📊 Route Performance")
             
             # Pie chart for routes

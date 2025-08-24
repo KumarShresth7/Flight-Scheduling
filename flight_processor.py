@@ -14,6 +14,7 @@ load_dotenv()
 
 
 gemini_api_key = os.getenv("GEMINI_API_KEY")
+file_path = "Flight_Data.xlsx"
 
 class FlightDataProcessor:
     def __init__(self, gemini_api_key):
@@ -26,14 +27,12 @@ class FlightDataProcessor:
         
     def load_and_process_data(self, file_path):
         """Load Excel data and process with LangChain"""
-        # Load Excel file
+
         df_6am = pd.read_excel(file_path, sheet_name='6AM - 9AM', skiprows=1)
         df_9am = pd.read_excel(file_path, sheet_name='9AM - 12PM', skiprows=1)
         
-        # Combine datasets
         combined_df = pd.concat([df_6am, df_9am], ignore_index=True)
         
-        # Clean and structure data using Gemini
         cleaned_data = self._clean_data_with_gemini(combined_df)
         
         return cleaned_data
@@ -69,9 +68,8 @@ class FlightDataProcessor:
         
         chain = LLMChain(llm=self.llm, prompt=cleaning_prompt)
         
-        # Process data in chunks
         processed_flights = []
-        for chunk in np.array_split(df, 10):  # Process in smaller chunks
+        for chunk in np.array_split(df, 10):
             chunk_str = chunk.to_string()
             result = chain.run(raw_data=chunk_str)
             processed_flights.append(result)
@@ -121,7 +119,7 @@ class FlightDatabase:
         self.engine = create_engine(f'sqlite:///{db_path}')
         self.Base = declarative_base()
         
-        # Define Flight table
+
         class Flight(self.Base):
             __tablename__ = 'flights'
             
@@ -148,8 +146,6 @@ class FlightDatabase:
         """Store processed flight data"""
         session = self.Session()
         for flight_data in processed_flights:
-            # Parse and store each flight record
-            # Implementation details for data insertion
             pass
         session.commit()
         session.close()
