@@ -1,0 +1,11 @@
+# requirements.txt
+langchain
+langchain-google-genai
+streamlit
+pandas
+numpy
+plotly
+sqlalchemy
+python-dotenv
+openpyxl
+chromadb
